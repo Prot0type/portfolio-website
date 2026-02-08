@@ -1,0 +1,90 @@
+name: Deploy Staging
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: us-west-2
+      STACK_NAME: PortfolioStaging
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_STAGING_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install frontend dependencies
+        run: npm install
+
+      - name: Install CDK dependencies
+        run: |
+          cd infra/cdk
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          npm install -g aws-cdk
+
+      - name: Deploy infrastructure
+        run: |
+          cd infra/cdk
+          cdk deploy $STACK_NAME --context environment=staging --outputs-file outputs.json --require-approval never
+
+      - name: Export stack outputs
+        id: outputs
+        run: |
+          cd infra/cdk
+          echo "site_bucket=$(jq -r --arg s "$STACK_NAME" '.[$s].SiteBucketName' outputs.json)" >> "$GITHUB_OUTPUT"
+          echo "cms_bucket=$(jq -r --arg s "$STACK_NAME" '.[$s].CmsBucketName' outputs.json)" >> "$GITHUB_OUTPUT"
+          echo "site_distribution=$(jq -r --arg s "$STACK_NAME" '.[$s].SiteDistributionId' outputs.json)" >> "$GITHUB_OUTPUT"
+          echo "cms_distribution=$(jq -r --arg s "$STACK_NAME" '.[$s].CmsDistributionId' outputs.json)" >> "$GITHUB_OUTPUT"
+          echo "user_pool_id=$(jq -r --arg s "$STACK_NAME" '.[$s].UserPoolId' outputs.json)" >> "$GITHUB_OUTPUT"
+          echo "user_pool_client_id=$(jq -r --arg s "$STACK_NAME" '.[$s].UserPoolClientId' outputs.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Build site
+        env:
+          NEXT_PUBLIC_API_BASE_URL: ""
+        run: npm run build:site
+
+      - name: Build CMS
+        env:
+          NEXT_PUBLIC_API_BASE_URL: ""
+          NEXT_PUBLIC_ENABLE_AUTH: "true"
+          NEXT_PUBLIC_COGNITO_USER_POOL_ID: ${{ steps.outputs.outputs.user_pool_id }}
+          NEXT_PUBLIC_COGNITO_APP_CLIENT_ID: ${{ steps.outputs.outputs.user_pool_client_id }}
+        run: npm run build:cms
+
+      - name: Upload website assets
+        run: |
+          aws s3 sync apps/site/out s3://${{ steps.outputs.outputs.site_bucket }} --delete
+          aws s3 sync apps/cms/out s3://${{ steps.outputs.outputs.cms_bucket }} --delete
+
+      - name: Invalidate CloudFront caches
+        run: |
+          aws cloudfront create-invalidation --distribution-id ${{ steps.outputs.outputs.site_distribution }} --paths "/*"
+          aws cloudfront create-invalidation --distribution-id ${{ steps.outputs.outputs.cms_distribution }} --paths "/*"

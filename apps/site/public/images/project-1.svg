@@ -1,0 +1,9 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="900" fill="#0C1321"/>
+  <circle cx="200" cy="170" r="220" fill="#184B92"/>
+  <circle cx="940" cy="230" r="250" fill="#8A4A10"/>
+  <circle cx="570" cy="680" r="300" fill="#123D57"/>
+  <rect x="148" y="178" width="904" height="544" rx="32" fill="#0F1D32" stroke="#4A6FAE" stroke-width="2"/>
+  <text x="198" y="308" fill="#D5E5FF" font-size="60" font-family="Arial, sans-serif">Placeholder Project 01</text>
+  <text x="198" y="380" fill="#A4BAD8" font-size="30" font-family="Arial, sans-serif">Interactive visual composition</text>
+</svg>

@@ -1,0 +1,8 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="900" fill="#111018"/>
+  <path d="M-40 180C140 90 400 170 610 90C840 -1 1080 29 1260 170V420H-40V180Z" fill="#2F4975"/>
+  <path d="M-40 450C180 390 420 500 690 430C880 380 1060 410 1260 490V900H-40V450Z" fill="#78411D"/>
+  <rect x="160" y="200" width="880" height="500" rx="28" fill="#121A2D" stroke="#5D7BAE" stroke-width="2"/>
+  <text x="210" y="315" fill="#EDF4FF" font-size="60" font-family="Arial, sans-serif">Placeholder Project 02</text>
+  <text x="210" y="385" fill="#B4C4DD" font-size="30" font-family="Arial, sans-serif">Balanced motion and gradients</text>
+</svg>

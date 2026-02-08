@@ -1,0 +1,30 @@
+{
+  "staging": {
+    "stackName": "PortfolioStaging",
+    "region": "us-west-2",
+    "adminEmail": "shardulchuri7@gmail.com",
+    "siteDomain": "staging.ishanichuri.com",
+    "cmsDomain": "cms-staging.ishanichuri.com",
+    "alarmEmail": "shardulchuri7@gmail.com",
+    "customDomain": {
+      "enabled": false,
+      "hostedZoneId": "",
+      "hostedZoneName": "ishanichuri.com",
+      "certificateArn": ""
+    }
+  },
+  "prod": {
+    "stackName": "PortfolioProd",
+    "region": "us-west-2",
+    "adminEmail": "shardulchuri7@gmail.com",
+    "siteDomain": "ishanichuri.com",
+    "cmsDomain": "cms.ishanichuri.com",
+    "alarmEmail": "shardulchuri7@gmail.com",
+    "customDomain": {
+      "enabled": false,
+      "hostedZoneId": "",
+      "hostedZoneName": "ishanichuri.com",
+      "certificateArn": ""
+    }
+  }
+}

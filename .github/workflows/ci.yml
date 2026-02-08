@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install frontend dependencies
+        run: npm install
+
+      - name: Lint frontend apps
+        run: |
+          npm run lint:site
+          npm run lint:cms
+
+      - name: Test frontend apps
+        run: |
+          npm run test:site
+          npm run test:cms
+
+      - name: Build frontend apps
+        env:
+          NEXT_PUBLIC_ENABLE_AUTH: "false"
+        run: |
+          npm run build:site
+          npm run build:cms
+
+      - name: Test API
+        run: |
+          cd services/api
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+          pytest
+
+      - name: Validate CDK Python modules
+        run: |
+          cd infra/cdk
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          python -m compileall app.py portfolio_cdk
