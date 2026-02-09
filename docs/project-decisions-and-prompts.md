@@ -133,7 +133,10 @@ Validation decisions:
 ### 4.6 Contact Page
 
 - Four icon cards (LinkedIn, Instagram, Behance, Email)
-- Alternating alignment left/right
+- Centered page layout and centered contact card stack
+- Heading on contact page uses Fredoka (not Stalemate script style)
+- Small top-right back button returns to home
+- Static corner `L` markers (top-right and bottom-left) on contact page to preserve "inside the box" feeling
 - Hover interaction dims other cards to ~50% opacity
 - Uses provided SVG icons
 
@@ -284,6 +287,150 @@ User requested:
 
 - document that box animation behavior is now working as expected
 - create a checkpoint commit named `Box Animation Functionality working`
+
+### Prompt I: Contact page tidy pass + persistent logging instruction
+
+User requested:
+
+- document every future prompt and outcome by default
+- contact page should use Fredoka instead of Stalemate
+- center everything on the contact page
+- add a small top-right back button
+- show static corner `L`s on contact page (non-animated), matching the in-box visual language
+
+Outcome implemented:
+
+- contact header now uses Fredoka styling and centered layout
+- contact content is centered on page with centered card stack
+- small back button added at top-right linking to `/`
+- static frame corner `L`s rendered on contact page (top-right and bottom-left)
+
+### Prompt J: Contact text alignment bug
+
+User requested:
+
+- investigate why contact page words were not visually aligned
+- fix alignment before adding requested contact-page animation
+
+Outcome implemented:
+
+- contact card copy area now uses a dedicated left-aligned grid column
+- consistent label/handle line-height and spacing applied
+- icon box made non-shrinking and text block top-aligned for stable row alignment
+
+### Prompt K: Contact section fade-up entrance
+
+User requested:
+
+- add a subtle fade-in with small vertical motion for the entire contact content block
+
+Outcome implemented:
+
+- `contact-page-inner` now animates in with a short fade-up on load
+- reduced-motion fallback added to disable the animation and render fully visible content
+
+### Prompt L: Collapsed social blocks with hover expansion
+
+User requested:
+
+- reduce the visual length of the four contact blocks
+- keep only SVGs visible by default
+- on hover over an SVG, expand horizontally to reveal the full card content
+- document this change
+
+Outcome implemented:
+
+- contact cards now start in a compact icon-only collapsed state
+- hover/focus expands each card horizontally and reveals the label/handle text
+- expanded width reduced to a shorter max width compared with previous version
+- touch-device fallback keeps cards expanded for usability
+
+### Prompt M: Contact icon visibility + alignment polish
+
+User requested:
+
+- fix poor icon visibility in collapsed state
+- correct alignment issues between collapsed and expanded states
+- make SVGs black and larger initially
+- when card expands into black box, make icons white and smaller
+- document the prompt and outcome
+
+Outcome implemented:
+
+- collapsed state now uses larger black icons with stronger visibility
+- expanded state transitions icons to smaller white treatment inside the dark card
+- collapsed cards now use true icon-only spacing (no hidden-text gap), fixing alignment drift
+- expanded max width further reduced for a tighter layout
+
+### Prompt N: Contact row alignment correction follow-up
+
+User requested:
+
+- alignment still looked incorrect after previous adjustments
+- keep prompt/outcome documentation updated
+
+Outcome implemented:
+
+- contact rows now anchor to a fixed left edge within a centered stack
+- collapsed icon-only rows and expanded rows share the same icon column reference
+- cards now expand horizontally to the right, reducing perceived lateral jump
+
+### Prompt O: Center-anchored responsive contact interaction
+
+User requested:
+
+- remove viewport-fragile alignment behavior
+- keep unhovered SVGs centered
+- keep expanded black box centered as well
+- ensure behavior works for desktop and mobile
+
+Outcome implemented:
+
+- contact cards now use center-anchored collapsed and expanded states
+- responsive sizing moved to `clamp`/`min` variables instead of fixed pixel assumptions
+- collapsed icons remain centered and visible, while expanded cards open in-place around center
+- touch-device fallback keeps expanded state centered and usable
+
+### Prompt P: Back button icon reorganization + corner placement
+
+User requested:
+
+- use `temp_folder_to_reorganize/circle-chevron-left-solid-full.svg` for back button
+- move button inside top-right corner `L`
+- reorganize that SVG into an appropriate project asset path (rename allowed)
+
+Outcome implemented:
+
+- SVG moved into site icon assets as `apps/site/public/icons/back-circle-chevron-left.svg`
+- contact back button now uses that SVG icon
+- back button repositioned into the top-right corner `L` area (icon button instead of text)
+
+### Prompt Q: Back icon visual cleanup
+
+User requested:
+
+- remove the extra circle around the back SVG
+- make the back SVG bigger
+- move the back icon further inside the top-right `L`
+
+Outcome implemented:
+
+- removed outer button chrome, leaving icon-only back control styling
+- increased icon render size via responsive sizing
+- nudged icon deeper inside the corner `L` with responsive inset offsets
+
+### Prompt R: Contact component approval + checkpoint commit request
+
+User requested:
+
+- confirm this current contact component styling as accepted
+- document this acceptance
+- create a checkpoint commit titled `completed title page`
+
+Outcome implemented:
+
+- recorded acceptance of current contact-page component treatment
+- prepared checkpoint commit with requested title
 
 ## 10. Next Iteration Candidates
 
