@@ -32,6 +32,18 @@ a {
   color: inherit;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .menu-button {
   position: fixed;
   top: 1rem;
@@ -232,6 +244,45 @@ a {
   z-index: 2;
 }
 
+.home-profile-block {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(180px, 320px) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(1rem, 2.6vw, 2.4rem);
+  margin-bottom: clamp(1.8rem, 3.8vw, 3.1rem);
+}
+
+.home-profile-photo {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  display: block;
+  border-radius: 1rem;
+  border: 1px solid var(--line);
+  box-shadow: 0 18px 36px -28px rgba(9, 14, 18, 0.45);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.home-profile-bio {
+  display: grid;
+  gap: 0.92rem;
+  color: var(--ink);
+  max-width: 38ch;
+}
+
+.home-profile-bio p {
+  margin: 0;
+  line-height: 1.5;
+  font-size: clamp(1.02rem, 1.4vw, 1.22rem);
+}
+
+.home-profile-bio p:first-child {
+  font-size: clamp(1.14rem, 1.8vw, 1.7rem);
+  line-height: 1.42;
+  font-weight: 500;
+}
+
 .inside-frame-card {
   border: 1px solid var(--line);
   background: var(--card);
@@ -280,65 +331,168 @@ a {
   font-size: 0.86rem;
 }
 
+.highlight-section-full-bleed {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+}
+
+.carousel-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: clamp(0.72rem, 1.4vw, 0.96rem);
+  padding: 0 clamp(34px, 5vw, 64px) 0.68rem;
+}
+
+.carousel-title {
+  margin: 0;
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+  font-size: clamp(1.2rem, 2.25vw, 1.72rem);
+  font-weight: 700;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+}
+
+.carousel-projects-cta {
+  text-decoration: none;
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(0.72rem, 1.4vw, 0.96rem);
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.carousel-projects-cta:hover,
+.carousel-projects-cta:focus-visible {
+  transform: translateY(-1px);
+  opacity: 0.76;
+}
+
+.carousel-projects-cta:focus-visible {
+  outline: 2px solid rgba(12, 19, 24, 0.38);
+  outline-offset: 3px;
+}
+
+.carousel-projects-link {
+  width: clamp(1.72rem, 2.8vw, 2.08rem);
+  height: clamp(1.72rem, 2.8vw, 2.08rem);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  flex-shrink: 0;
+}
+
+.carousel-projects-link img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.carousel-empty-note {
+  padding: 0 clamp(28px, 4.2vw, 52px);
+}
+
 .marquee-shell {
-  margin-top: 0.7rem;
   overflow: hidden;
-  border-radius: 0.8rem;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.68);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding-inline: clamp(28px, 4.2vw, 52px);
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: pan-y;
+}
+
+.marquee-shell.is-dragging {
+  cursor: grabbing;
 }
 
 .marquee-track {
   display: flex;
-  gap: 0.7rem;
+  align-items: flex-start;
+  gap: 1rem;
   width: max-content;
-  padding: 0.7rem;
-  animation: slideLeft 38s linear infinite;
+  will-change: transform;
 }
 
-.marquee-shell:hover .marquee-track {
-  animation-play-state: paused;
+.marquee-segment {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
 }
 
 .highlight-card {
-  width: min(74vw, 260px);
+  width: clamp(20rem, 44vw, 34rem);
   text-decoration: none;
-  border: 1px solid var(--line);
-  border-radius: 0.75rem;
+  border: 0;
+  border-radius: 1rem;
   overflow: hidden;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.88);
   color: var(--ink);
-  transition: width 0.28s ease, box-shadow 0.25s ease;
+  box-shadow: 0 10px 24px -22px rgba(8, 12, 16, 0.55);
+  transition: transform 0.24s ease, box-shadow 0.24s ease;
   flex-shrink: 0;
+  align-self: flex-start;
 }
 
 .highlight-card:hover {
-  width: min(84vw, 330px);
-  box-shadow: 0 14px 24px -20px var(--shadow);
+  transform: translateY(-1px);
+  box-shadow: 0 18px 32px -26px rgba(8, 12, 16, 0.55);
+}
+
+.highlight-card:focus-visible,
+.highlight-card:focus-within {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 32px -26px rgba(8, 12, 16, 0.55);
 }
 
 .highlight-card img {
   width: 100%;
-  height: 160px;
+  height: clamp(15rem, 30vw, 22rem);
   object-fit: cover;
   display: block;
 }
 
 .highlight-meta {
-  padding: 0.7rem;
   display: grid;
-  gap: 0.2rem;
+  gap: 0.3rem;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  padding: 0 1rem;
+  transform: translateY(-0.45rem);
+  transition:
+    max-height 0.3s ease,
+    padding 0.3s ease,
+    opacity 0.22s ease,
+    transform 0.3s ease;
+}
+
+.highlight-card:hover .highlight-meta,
+.highlight-card:focus-visible .highlight-meta,
+.highlight-card:focus-within .highlight-meta {
+  max-height: 8.5rem;
+  opacity: 1;
+  padding: 0.95rem 1rem 1rem;
+  transform: translateY(0);
 }
 
 .highlight-title {
   margin: 0;
+  font-size: clamp(1rem, 1.6vw, 1.35rem);
   font-weight: 700;
 }
 
 .highlight-category,
 .highlight-tag {
   margin: 0;
-  font-size: 0.82rem;
+  font-size: clamp(0.85rem, 1.15vw, 1rem);
 }
 
 .highlight-tag {
@@ -894,8 +1048,36 @@ a {
 
 @media (max-width: 900px) {
   .home-content-shell {
-    padding-left: 1.1rem;
-    padding-right: 1.1rem;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .home-profile-block {
+    grid-template-columns: minmax(132px, 42vw) minmax(0, 1fr);
+    align-items: start;
+    gap: clamp(0.85rem, 3vw, 1.25rem);
+    margin-bottom: clamp(1.3rem, 4.4vw, 2.1rem);
+    text-align: left;
+  }
+
+  .home-profile-photo {
+    width: 100%;
+  }
+
+  .home-profile-bio p:first-child {
+    font-size: clamp(1rem, 3.6vw, 1.36rem);
+  }
+
+  .marquee-shell {
+    padding-inline: clamp(16px, 3.4vw, 28px);
+  }
+
+  .marquee-track {
+    gap: 0.85rem;
+  }
+
+  .marquee-segment {
+    gap: 0.85rem;
   }
 
   .projects-grid {
@@ -916,6 +1098,14 @@ a {
   .page-shell {
     padding-left: 0.9rem;
     padding-right: 0.9rem;
+  }
+
+  .highlight-card {
+    width: clamp(17.6rem, 88vw, 24rem);
+  }
+
+  .highlight-card img {
+    height: clamp(12.8rem, 58vw, 16rem);
   }
 
   .home-scroll-intro {

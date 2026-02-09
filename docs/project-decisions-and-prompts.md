@@ -432,9 +432,216 @@ Outcome implemented:
 - recorded acceptance of current contact-page component treatment
 - prepared checkpoint commit with requested title
 
+### Prompt S: Home carousel redesign pass
+
+User requested:
+
+- remove the "Thoughtful interfaces..." home card entirely
+- redesign carousel to span from left to right edge of viewport
+- make carousel cards significantly larger (about 2x current feel)
+- reduce excessive border treatment
+- remove "Highlighted Projects" labeling
+- use "all projects" with a button to `/projects`
+- focus only on carousel changes in this pass
+
+Outcome implemented:
+
+- removed the "Thoughtful interfaces..." card block from home
+- carousel converted to a full-bleed viewport strip
+- card sizes increased substantially with larger media area
+- border weight reduced and visual chrome simplified
+- carousel header now uses `all projects` + `view all` link to `/projects`
+
+### Prompt T: Carousel header alignment + icon button swap
+
+User requested:
+
+- align `all projects` toward the right, inside the margin defined by the corner `L`s
+- use `apps/site/public/icons/square-arrow-up-right-solid-full.svg` for the `view all` action
+- place the button to the right of `all projects`
+- avoid circular button chrome around the SVG
+
+Outcome implemented:
+
+- carousel header group (`all projects` + action) now right-aligns within responsive corner-margin padding
+- `view all` switched to icon-only SVG control using `square-arrow-up-right-solid-full.svg`
+- removed pill/circle styling from that action, retaining a minimal icon link with accessible label
+
+### Prompt U: Carousel action sizing + manual drag control
+
+User requested:
+
+- slightly increase the `view all` icon button size
+- increase its right-side margin/inset a bit more
+- add hold-and-drag manual control to the carousel while keeping the loop behavior
+
+Outcome implemented:
+
+- increased `view all` icon size and nudged header inset further from the right edge
+- replaced CSS-only marquee motion with JS-driven looped auto-scroll
+- added pointer hold-and-drag interaction for manual horizontal movement
+- preserved seamless looping via duplicated segments and wrapped offset normalization
+
+### Prompt V: Carousel movement bug + performance concern follow-up
+
+User reported:
+
+- console warnings and uncertainty about relevance
+- carousel not moving automatically and not draggable
+- perceived performance degradation after JS carousel change
+
+Outcome implemented:
+
+- fixed loop offset normalization logic so auto-scroll progresses correctly
+- added pointer-default suppression on drag start for stable hold-and-drag behavior
+- removed `aria-hidden` on duplicated segment to eliminate focus-hidden accessibility warning path
+- retained JS loop approach but with transform-only updates to keep runtime overhead low
+
+### Prompt W: Carousel boundary gap consistency fix
+
+User reported:
+
+- gap between end/start cards across loop boundary was noticeably larger than normal card-to-card spacing
+
+Outcome implemented:
+
+- removed extra segment-end padding that was inflating only the group boundary gap
+- moved viewport insets to the marquee shell so edge spacing remains consistent
+- aligned segment gap and inter-segment gap values to keep spacing uniform across the full loop
+
+### Prompt X: Hover-pause restoration + carousel responsiveness
+
+User reported:
+
+- carousel no longer paused on hover after drag-loop refactor
+- perceived slower loading/performance after recent carousel changes
+
+Outcome implemented:
+
+- restored hover/focus pause logic directly in the JS animation loop
+- added viewport-visibility and document-visibility gating to avoid unnecessary scroll work when offscreen/hidden
+- added lazy image loading/async decoding hints for carousel images
+- preserved hold-and-drag manual control and seamless looping
+
+### Prompt Y: Carousel loop-boundary pop/gap smoothing
+
+User reported:
+
+- visible large travel/gap and abrupt “new group pop-in” at loop boundary
+
+Outcome implemented:
+
+- updated loop-wrap measurement to use exact segment-start to segment-start distance
+- wrap normalization now uses true cycle length (including inter-segment spacing)
+- boundary transition now remains continuous with no artificial jump at repeat point
+
+### Prompt Z: Carousel header text/button alignment and scale polish
+
+User requested:
+
+- increase size of both `all projects` text and the adjacent icon button
+- improve vertical alignment so icon and text feel centered on the same baseline
+
+Outcome implemented:
+
+- increased `all projects` title font size and weight
+- increased action icon link dimensions for clearer visual balance
+- tightened header row alignment with explicit line-height and flex centering
+- nudged header inset/gap values so right-edge alignment remains clean within corner margins
+
+### Prompt AA: Make full carousel header action clickable
+
+User requested:
+
+- make the entire `all projects` label plus icon button clickable
+- keep navigation target as `/projects`
+
+Outcome implemented:
+
+- wrapped `all projects` text and icon inside one link target to `/projects`
+- moved hover/focus interaction to the combined action so the whole control behaves consistently
+- retained accessible label/title semantics for the unified click target
+
+### Prompt AB: Hover-reveal carousel metadata panel
+
+User requested:
+
+- show only the project thumbnail in the default carousel state
+- reveal the bottom metadata panel only when hovering a card
+- make the hovered card feel like it expands downward while carousel motion pauses
+
+Outcome implemented:
+
+- updated card metadata area to be collapsed by default (hidden height + opacity)
+- added hover/focus reveal transition so title/category/tag slide/fade in on interaction
+- kept existing hover pause behavior in the carousel so movement halts during interaction
+- adjusted hover card transform to emphasize downward reveal rather than full-card scaling
+
+### Prompt AC: Restrict hover expansion to hovered card only
+
+User reported:
+
+- metadata appears only on the hovered card, but all carousel cards still expand downward
+- desired behavior is that only the hovered card should expand
+
+Outcome implemented:
+
+- corrected flex alignment in marquee containers to stop cross-card stretch behavior
+- set track and segment alignment to `flex-start` so sibling cards keep independent heights
+- anchored each card with `align-self: flex-start` so non-hover cards remain collapsed
+
+### Prompt AD: Add home profile block above carousel
+
+User requested:
+
+- add a portrait placeholder image between intro and carousel, within frame margins
+- move `temp_folder/ishani_churi-300x300.jpg` to a proper location and remove the temp folder
+- add short bio copy beside the image using a column layout that adapts to all viewports
+- apply the same subtle fade-up reveal style used on the contact content block
+
+Outcome implemented:
+
+- added a new responsive home profile block above the carousel (image + bio, no header)
+- moved image asset to `apps/site/public/images/ishani-portrait-placeholder.jpg`
+- removed temporary `temp_folder` after migration
+- added fade-up entrance animation and reduced-motion fallback for the profile block
+- used provided bio lines:
+  - `IITH graduate with 3+ years of experience and a passion to create.`
+  - `Mi khoop katkat karte.`
+
+### Prompt AE: Profile block spacing, readability, and animation tuning
+
+User reported:
+
+- carousel felt too close to the new bio/photo block
+- bio typography felt too small/underwhelming, especially in portrait
+- portrait behavior looked weak when text dropped below the image
+- fade-up animation felt too quick or sometimes not visible
+
+Outcome implemented:
+
+- increased separation between profile block and carousel with responsive bottom spacing
+- strengthened bio typography (larger first line, improved line-height and rhythm)
+- revised responsive profile layout to keep image and bio side-by-side longer on narrow portrait widths
+- migrated profile reveal from load-time CSS animation to scroll-timed motion values so fade-up is visible when section enters
+- slightly widened overall content reveal timing for a less abrupt entrance
+
+### Prompt AF: Landing page prototype checkpoint commit
+
+User requested:
+
+- document this current state
+- commit as a working landing-page prototype checkpoint
+
+Outcome implemented:
+
+- recorded this checkpoint in the project prompt/decision log
+- committed current landing-page prototype state with the requested commit title
+
 ## 10. Next Iteration Candidates
 
 - Tune animation pacing and corner-L interpolation
 - Refine mobile breakpoints and visual polish
 - Improve lint pipeline compatibility with current Next CLI behavior
 - Decide static vs compute hosting for project detail pages after CMS growth
+

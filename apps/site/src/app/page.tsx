@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { motion, useMotionValueEvent, useReducedMotion, useScroll, useSpring, useTransform } from "framer-motion";
 
@@ -40,8 +39,10 @@ export default function HomePage() {
 
   const introNameOpacity = useTransform(openProgress, [0, 0.84], [1, 0], { clamp: true });
   const outroNameOpacity = useTransform(closeProgress, [0.42, 1], [0, 1], { clamp: true });
-  const contentOpacity = useTransform(openProgress, [0.88, 1], [0, 1], { clamp: true });
-  const contentY = useTransform(openProgress, [0.88, 1], [72, 0], { clamp: true });
+  const contentOpacity = useTransform(openProgress, [0.78, 0.98], [0, 1], { clamp: true });
+  const contentY = useTransform(openProgress, [0.78, 0.98], [96, 0], { clamp: true });
+  const profileOpacity = useTransform(openProgress, [0.82, 0.98], [0, 1], { clamp: true });
+  const profileY = useTransform(openProgress, [0.82, 0.98], [26, 0], { clamp: true });
 
   const halfBoxWidth = Math.min(280, viewport.width * 0.22);
   const halfBoxHeight = Math.min(170, viewport.height * 0.22);
@@ -169,21 +170,25 @@ export default function HomePage() {
               }
         }
       >
-        <article className="inside-frame-card">
-          <p className="kicker">UX portfolio</p>
-          <h2>Thoughtful interfaces with measured motion.</h2>
-          <p>
-            This space highlights selected work, process snapshots, and interaction explorations by Ishani Churi.
-          </p>
-          <div className="quick-actions">
-            <Link href="/projects">View all projects</Link>
-            <Link href="/contact">Contact</Link>
+        <motion.section
+          className="home-profile-block"
+          aria-label="Ishani profile"
+          style={reduceMotion ? undefined : { opacity: profileOpacity, y: profileY }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            className="home-profile-photo"
+            src="/images/ishani-portrait-placeholder.jpg"
+            alt="Portrait placeholder of Ishani Churi"
+            loading="lazy"
+            decoding="async"
+          />
+          <div className="home-profile-bio">
+            <p>IITH graduate with 3+ years of experience and a passion to create.</p>
+            <p>Mi khoop katkat karte.</p>
           </div>
-        </article>
-
-        <article className="inside-frame-card">
-          {loading ? <p className="empty-note">Loading highlighted projects...</p> : <HighlightCarousel projects={projects} />}
-        </article>
+        </motion.section>
+        {loading ? <p className="empty-note">Loading projects...</p> : <HighlightCarousel projects={projects} />}
       </motion.section>
 
       <section className="home-scroll-end" />
