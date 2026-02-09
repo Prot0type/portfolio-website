@@ -1,4 +1,5 @@
 export type ProjectStatus = "draft" | "published";
+export type ProjectCategory = "Personal" | "College" | "Work" | "Freelance";
 
 export type ProjectImage = {
   key: string;
@@ -11,8 +12,10 @@ export type ProjectRecord = {
   title: string;
   description: string;
   tags: string[];
+  category: ProjectCategory;
   project_date: string;
   images: ProjectImage[];
+  is_highlighted: boolean;
   status: ProjectStatus;
   sort_order: number;
   extra: Record<string, unknown>;
@@ -21,4 +24,3 @@ export type ProjectRecord = {
 };
 
 export type ProjectInput = Omit<ProjectRecord, "created_at" | "updated_at">;
-

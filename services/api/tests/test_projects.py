@@ -10,8 +10,10 @@ def test_create_list_and_update_project(client):
         "title": "Case Study",
         "description": "Responsive redesign with animated interactions.",
         "tags": ["nextjs", "aws"],
+        "category": "Work",
         "project_date": "2026-02-08",
         "images": [{"key": "placeholder-1", "url": "/images/project-1.svg", "alt": "placeholder"}],
+        "is_highlighted": True,
         "status": "draft",
         "sort_order": 2,
         "extra": {"client": "Internal"},
@@ -43,7 +45,8 @@ def test_delete_project(client):
         json={
             "title": "Delete Me",
             "description": "Temporary entry",
-            "tags": [],
+            "tags": ["cleanup"],
+            "category": "Personal",
             "project_date": "2026-01-01",
             "images": [],
             "status": "draft",
@@ -58,3 +61,20 @@ def test_delete_project(client):
     missing_response = client.get(f"/api/projects/{project_id}")
     assert missing_response.status_code == 404
 
+
+def test_requires_primary_tag(client):
+    create_response = client.post(
+        "/api/projects",
+        json={
+            "title": "No Primary",
+            "description": "Should fail",
+            "tags": [],
+            "category": "College",
+            "project_date": "2026-01-01",
+            "images": [],
+            "status": "draft",
+            "sort_order": 0,
+            "extra": {},
+        },
+    )
+    assert create_response.status_code == 422

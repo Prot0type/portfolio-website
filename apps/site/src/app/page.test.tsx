@@ -9,17 +9,17 @@ vi.mock("@/lib/api", () => ({
   recordWebsiteView: vi.fn(async () => undefined)
 }));
 
-vi.mock("@/components/project-carousel", () => ({
-  ProjectCarousel: () => <div>Mock Carousel</div>
+vi.mock("@/components/highlight-carousel", () => ({
+  HighlightCarousel: () => <div>Mock Highlight Carousel</div>
 }));
 
 describe("HomePage", () => {
   it("renders main sections", async () => {
     render(<HomePage />);
-    expect(screen.getByText(/Building high-impact digital products/i)).toBeInTheDocument();
+    expect(screen.getByText("ishani")).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByText(/Find me online/i)).toBeInTheDocument();
+      expect(screen.getByText(/thank you/i)).toBeInTheDocument();
     });
   });
 });

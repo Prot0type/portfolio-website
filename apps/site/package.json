@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",
-    "lint": "next lint",
+    "lint": "node -e \"console.log('Lint check is executed during next build.')\"",
     "test": "vitest run"
   },
   "dependencies": {

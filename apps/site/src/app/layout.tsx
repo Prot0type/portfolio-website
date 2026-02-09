@@ -1,9 +1,24 @@
 import type { Metadata } from "next";
+import localFont from "next/font/local";
+
+import { SiteShell } from "@/components/site-shell";
 import "./globals.css";
 
+const stalemate = localFont({
+  src: "./fonts/Stalemate-Regular.ttf",
+  variable: "--font-stalemate",
+  weight: "400"
+});
+
+const fredoka = localFont({
+  src: "./fonts/Fredoka-VariableFont_wdth,wght.ttf",
+  variable: "--font-fredoka",
+  weight: "300 700"
+});
+
 export const metadata: Metadata = {
-  title: "Ishani Churi | Portfolio",
-  description: "Interactive portfolio website for selected projects and experiments."
+  title: "ishani churi | ux portfolio",
+  description: "Portfolio website for Ishani Churi, UX designer."
 };
 
 type RootLayoutProps = Readonly<{
@@ -13,8 +28,9 @@ type RootLayoutProps = Readonly<{
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className={`${stalemate.variable} ${fredoka.variable}`}>
+        <SiteShell>{children}</SiteShell>
+      </body>
     </html>
   );
 }
-

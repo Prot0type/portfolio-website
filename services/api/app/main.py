@@ -55,6 +55,18 @@ def create_app() -> FastAPI:
     def is_authorized(claims: Optional[dict]) -> bool:
         return claims is not None
 
+    def validate_project_for_status_change(project: ProjectRecord) -> None:
+        if not project.category:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Category is required before changing status.",
+            )
+        if not project.tags or not project.tags[0].strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="At least one tag is required before changing status. The first tag is primary.",
+            )
+
     @app.get("/api/projects", response_model=list[ProjectRecord])
     def list_projects(
         status_filter: Literal["published", "draft", "all"] = "published",
@@ -97,6 +109,14 @@ def create_app() -> FastAPI:
         _: dict = Depends(require_admin),
         repo: ProjectRepository = Depends(get_repo),
     ) -> ProjectRecord:
+        existing = repo.get_project(project_id)
+        if not existing:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+
+        candidate = existing.model_copy(update=payload.model_dump(exclude_unset=True))
+        if payload.status is not None:
+            validate_project_for_status_change(candidate)
+
         updated = repo.update_project(project_id=project_id, payload=payload)
         if not updated:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
@@ -109,6 +129,11 @@ def create_app() -> FastAPI:
         _: dict = Depends(require_admin),
         repo: ProjectRepository = Depends(get_repo),
     ) -> ProjectRecord:
+        existing = repo.get_project(project_id)
+        if not existing:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+        validate_project_for_status_change(existing)
+
         updated = repo.update_project(project_id=project_id, payload=ProjectUpdate(status=payload.status))
         if not updated:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")

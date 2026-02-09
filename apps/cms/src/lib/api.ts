@@ -9,6 +9,18 @@ function withBase(path: string) {
   return `${apiBase()}${path}`;
 }
 
+function shouldUseLocalUploadFallback() {
+  return (process.env.NEXT_PUBLIC_ENABLE_AUTH ?? "true").toLowerCase() === "false";
+}
+
+function buildLocalUploadFallback(file: File) {
+  const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  return {
+    key: `local-${stamp}-${file.name.replace(/\s+/g, "-").toLowerCase()}`,
+    publicUrl: URL.createObjectURL(file)
+  };
+}
+
 async function authHeaders(): Promise<Record<string, string>> {
   const token = await getAuthToken();
   if (!token) {
@@ -90,6 +102,9 @@ export async function uploadImage(file: File): Promise<{ key: string; publicUrl:
     })
   });
   if (!presign.ok) {
+    if (shouldUseLocalUploadFallback()) {
+      return buildLocalUploadFallback(file);
+    }
     throw new Error("Unable to get upload URL");
   }
   const data = (await presign.json()) as {
@@ -104,9 +119,11 @@ export async function uploadImage(file: File): Promise<{ key: string; publicUrl:
     body: file
   });
   if (!upload.ok) {
+    if (shouldUseLocalUploadFallback()) {
+      return buildLocalUploadFallback(file);
+    }
     throw new Error("Unable to upload image");
   }
 
   return { key: data.key, publicUrl: data.public_url };
 }
-

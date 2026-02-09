@@ -130,7 +130,7 @@ textarea {
 
 .split {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.6rem;
 }
 
@@ -138,6 +138,21 @@ textarea {
   margin: -0.3rem 0 0.8rem;
   color: var(--muted);
   font-size: 0.85rem;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.checkbox-row input {
+  width: auto;
+  margin: 0;
+}
+
+.checkbox-row span {
+  color: #cad8f5;
 }
 
 .image-list {
@@ -203,6 +218,17 @@ textarea {
   color: var(--warn);
 }
 
+.highlight-pill {
+  margin-left: 0.5rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid rgba(134, 217, 255, 0.5);
+  color: var(--accent);
+  border-radius: 999px;
+  padding: 0.2rem 0.45rem;
+}
+
 .row-actions {
   display: flex;
   gap: 0.4rem;
@@ -223,4 +249,3 @@ textarea {
     align-items: flex-start;
   }
 }
-

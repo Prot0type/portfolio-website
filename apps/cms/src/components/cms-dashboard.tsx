@@ -10,7 +10,9 @@ import {
   updateProjectStatus,
   uploadImage
 } from "@/lib/api";
-import type { ProjectImage, ProjectInput, ProjectRecord, ProjectStatus } from "@/lib/types";
+import type { ProjectCategory, ProjectImage, ProjectInput, ProjectRecord, ProjectStatus } from "@/lib/types";
+
+const CATEGORY_OPTIONS: ProjectCategory[] = ["Personal", "College", "Work", "Freelance"];
 
 function generateProjectId() {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -25,12 +27,35 @@ function newFormState(): ProjectInput {
     title: "",
     description: "",
     tags: [],
+    category: "Personal",
     project_date: new Date().toISOString().slice(0, 10),
     images: [],
+    is_highlighted: false,
     status: "draft",
     sort_order: 0,
     extra: {}
   };
+}
+
+function parseTags(value: string): string[] {
+  return value
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+}
+
+function tagsToInput(value: string[]): string {
+  return value.join(", ");
+}
+
+function validateForStatus(tags: string[], category: ProjectCategory | undefined): string | null {
+  if (!category) {
+    return "Category is required before saving.";
+  }
+  if (tags.length === 0) {
+    return "At least one tag is required. The first tag is the primary tag.";
+  }
+  return null;
 }
 
 type CmsDashboardProps = {
@@ -41,6 +66,7 @@ type CmsDashboardProps = {
 export function CmsDashboard({ userLabel, onSignOut }: CmsDashboardProps) {
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
   const [form, setForm] = useState<ProjectInput>(newFormState());
+  const [tagInput, setTagInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -74,16 +100,20 @@ export function CmsDashboard({ userLabel, onSignOut }: CmsDashboardProps) {
       title: project.title,
       description: project.description,
       tags: project.tags,
+      category: project.category,
       project_date: project.project_date,
       images: project.images,
+      is_highlighted: project.is_highlighted,
       status: project.status,
       sort_order: project.sort_order,
       extra: project.extra ?? {}
     });
+    setTagInput(tagsToInput(project.tags));
   }
 
   function resetForm() {
     setForm(newFormState());
+    setTagInput("");
   }
 
   function updateField<K extends keyof ProjectInput>(key: K, value: ProjectInput[K]) {
@@ -91,14 +121,26 @@ export function CmsDashboard({ userLabel, onSignOut }: CmsDashboardProps) {
   }
 
   async function save() {
+    const parsedTags = parseTags(tagInput);
+    const validationError = validateForStatus(parsedTags, form.category);
+    if (validationError) {
+      setNotice(validationError);
+      return;
+    }
+
     setSaving(true);
     try {
+      const payload: ProjectInput = {
+        ...form,
+        tags: parsedTags
+      };
+
       if (selectedProject) {
-        const { project_id: _discarded, ...patch } = form;
+        const { project_id: _discarded, ...patch } = payload;
         await updateProject(form.project_id, patch);
         setNotice("Project updated");
       } else {
-        await createProject(form);
+        await createProject(payload);
         setNotice("Project created");
       }
       await refresh();
@@ -127,6 +169,17 @@ export function CmsDashboard({ userLabel, onSignOut }: CmsDashboardProps) {
   }
 
   async function setStatus(projectId: string, status: ProjectStatus) {
+    const target = projects.find((project) => project.project_id === projectId);
+    if (!target) {
+      setNotice("Project not found");
+      return;
+    }
+    const validationError = validateForStatus(target.tags, target.category);
+    if (validationError) {
+      setNotice(validationError);
+      return;
+    }
+
     try {
       await updateProjectStatus(projectId, status);
       setNotice(`Project set to ${status}`);
@@ -147,7 +200,7 @@ export function CmsDashboard({ userLabel, onSignOut }: CmsDashboardProps) {
       const uploaded = await uploadImage(file);
       const imageEntry: ProjectImage = { key: uploaded.key, url: uploaded.publicUrl, alt: form.title || file.name };
       updateField("images", [...form.images, imageEntry]);
-      setNotice("Image uploaded");
+      setNotice("Image added");
     } catch (error) {
       setNotice((error as Error).message);
     } finally {
@@ -198,21 +251,22 @@ export function CmsDashboard({ userLabel, onSignOut }: CmsDashboardProps) {
             />
           </label>
           <label>
-            Tags (comma separated)
-            <input
-              value={form.tags.join(", ")}
-              onChange={(event) =>
-                updateField(
-                  "tags",
-                  event.target.value
-                    .split(",")
-                    .map((tag) => tag.trim())
-                    .filter(Boolean)
-                )
-              }
-            />
+            Tags (first tag is required and primary)
+            <input value={tagInput} onChange={(event) => setTagInput(event.target.value)} />
           </label>
+          <p className="helper-text">Use commas to separate tags. Example: ux, mobile, usability</p>
+
           <div className="split">
+            <label>
+              Category
+              <select value={form.category} onChange={(event) => updateField("category", event.target.value as ProjectCategory)}>
+                {CATEGORY_OPTIONS.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </label>
             <label>
               Date
               <input
@@ -238,11 +292,22 @@ export function CmsDashboard({ userLabel, onSignOut }: CmsDashboardProps) {
             </label>
           </div>
 
+          <label className="checkbox-row">
+            <input
+              type="checkbox"
+              checked={form.is_highlighted}
+              onChange={(event) => updateField("is_highlighted", event.target.checked)}
+            />
+            <span>Highlighted project (shown on home carousel)</span>
+          </label>
+
           <label>
             Upload Image
             <input type="file" accept="image/*" onChange={onImageSelect} disabled={uploading} />
           </label>
-          <p className="helper-text">Placeholders are supported now. Video support can be added later.</p>
+          <p className="helper-text">
+            In local mode (`NEXT_PUBLIC_ENABLE_AUTH=false`), uploads use local preview URLs when S3 is unavailable.
+          </p>
 
           <ul className="image-list">
             {form.images.map((image, index) => (
@@ -288,7 +353,11 @@ export function CmsDashboard({ userLabel, onSignOut }: CmsDashboardProps) {
                 <div>
                   <h3>{project.title}</h3>
                   <p>{project.project_date}</p>
+                  <p>
+                    {project.category} · Primary tag: {project.tags[0] ?? "-"}
+                  </p>
                   <span className={`status status-${project.status}`}>{project.status}</span>
+                  {project.is_highlighted ? <span className="highlight-pill">highlighted</span> : null}
                 </div>
                 <div className="row-actions">
                   <button type="button" onClick={() => editProject(project)}>
@@ -312,3 +381,4 @@ export function CmsDashboard({ userLabel, onSignOut }: CmsDashboardProps) {
     </main>
   );
 }
+
