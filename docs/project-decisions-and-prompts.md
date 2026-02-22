@@ -774,6 +774,46 @@ Outcome implemented / clarified:
   - OIDC `sub` claim should typically match `repo:Prot0type/portfolio-website:environment:development` for staging role trust
 - noted that branch restriction should be enforced via GitHub Environment branch rules when using environment-based OIDC `sub`
 
+### Prompt AN: CMS sign-in error `Auth UserPool not configured`
+
+User reported:
+
+- CMS sign-in shows `Auth UserPool not configured`
+
+Outcome clarified / hardened:
+
+- identified message as Amplify runtime error (not app-defined), which indicates missing/empty Cognito User Pool config in CMS build-time env vars
+- explained likely root cause when staging deploy fails before CMS build (e.g., OIDC role assumption failure), leaving an older/broken CMS deployment in place
+- added deploy workflow guard steps (staging + prod) to fail early if CDK stack outputs for Cognito IDs are empty/null before building CMS
+- next recovery path is to fix OIDC trust policy, rerun staging deploy, then hard refresh/Incognito to avoid cached static assets
+
+### Prompt AO: CMS access via temporary CloudFront URL troubleshooting
+
+User reported:
+
+- successful deploy but unable to access CMS using a specific CloudFront temporary domain
+
+Outcome clarified:
+
+- stack creates two separate CloudFront distributions (public site and CMS), each with its own temporary domain
+- CMS is not served under a subpath on the site distribution when custom domains are disabled
+- correct access path is the `CmsUrl` / `CmsDistributionDomain` stack output from `PortfolioStaging`
+- if the correct CMS URL still shows Cognito config errors, next checks are deploy logs/outputs, workflow output validation, and browser cache hard refresh
+
+### Prompt AP: CMS production sign-in shows `Auth UserPool not configured` despite successful deploy
+
+User reported:
+
+- correct CMS CloudFront URL is being used
+- CMS sign-in UI loads, but Amplify shows `Auth UserPool not configured`
+
+Outcome implemented / clarified:
+
+- identified likely root cause in CMS client auth config: dynamic `process.env[key]` access prevents reliable Next.js build-time replacement of `NEXT_PUBLIC_*` vars
+- updated CMS auth config to use direct `process.env.NEXT_PUBLIC_COGNITO_*` references for static embedding in production builds
+- retained existing workflow output validation guards added earlier to catch missing Cognito outputs before CMS build
+- next step is redeploy staging CMS (combined staging deploy currently) and hard refresh/Incognito
+
 ## 10. Next Iteration Candidates
 
 - Tune animation pacing and corner-L interpolation

@@ -5,10 +5,6 @@ import { fetchAuthSession } from "aws-amplify/auth";
 
 let configured = false;
 
-function env(key: string): string {
-  return process.env[key] ?? "";
-}
-
 export function isAuthEnabled(): boolean {
   return (process.env.NEXT_PUBLIC_ENABLE_AUTH ?? "true").toLowerCase() !== "false";
 }
@@ -21,8 +17,9 @@ export function configureAmplify() {
   Amplify.configure({
     Auth: {
       Cognito: {
-        userPoolId: env("NEXT_PUBLIC_COGNITO_USER_POOL_ID"),
-        userPoolClientId: env("NEXT_PUBLIC_COGNITO_APP_CLIENT_ID"),
+        // Use direct NEXT_PUBLIC env access so Next.js replaces values at build time in the client bundle.
+        userPoolId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID ?? "",
+        userPoolClientId: process.env.NEXT_PUBLIC_COGNITO_APP_CLIENT_ID ?? "",
         loginWith: {
           email: true
         }
@@ -39,4 +36,3 @@ export async function getAuthToken(): Promise<string | undefined> {
   const session = await fetchAuthSession();
   return session.tokens?.idToken?.toString();
 }
-

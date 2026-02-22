@@ -73,6 +73,15 @@ jobs:
           echo "user_pool_id=$(jq -r --arg s "$STACK_NAME" '.[$s].UserPoolId' outputs.json)" >> "$GITHUB_OUTPUT"
           echo "user_pool_client_id=$(jq -r --arg s "$STACK_NAME" '.[$s].UserPoolClientId' outputs.json)" >> "$GITHUB_OUTPUT"
 
+      - name: Validate stack outputs
+        run: |
+          test -n "${{ steps.outputs.outputs.site_bucket }}" && test "${{ steps.outputs.outputs.site_bucket }}" != "null"
+          test -n "${{ steps.outputs.outputs.cms_bucket }}" && test "${{ steps.outputs.outputs.cms_bucket }}" != "null"
+          test -n "${{ steps.outputs.outputs.site_distribution }}" && test "${{ steps.outputs.outputs.site_distribution }}" != "null"
+          test -n "${{ steps.outputs.outputs.cms_distribution }}" && test "${{ steps.outputs.outputs.cms_distribution }}" != "null"
+          test -n "${{ steps.outputs.outputs.user_pool_id }}" && test "${{ steps.outputs.outputs.user_pool_id }}" != "null"
+          test -n "${{ steps.outputs.outputs.user_pool_client_id }}" && test "${{ steps.outputs.outputs.user_pool_client_id }}" != "null"
+
       - name: Build site
         env:
           NEXT_PUBLIC_API_BASE_URL: ""
