@@ -759,6 +759,21 @@ Outcome implemented:
 - confirmed production workflow already uses GitHub Environment `production`
 - updated CI/CD docs to clarify environment-secret scoping and workflow environment binding
 
+### Prompt AM: CI API import failure + OIDC assume-role troubleshooting
+
+User reported:
+
+- GitHub CI API test step failing with `ModuleNotFoundError: No module named 'app'`
+- staging deploy failing at OIDC role assumption with `Not authorized to perform sts:AssumeRoleWithWebIdentity`
+
+Outcome implemented / clarified:
+
+- fixed CI workflow API test step to run with `PYTHONPATH=. python -m pytest` inside `services/api`
+- clarified likely OIDC trust-policy mismatch caused by GitHub Environment usage:
+  - staging workflow now runs with environment `development`
+  - OIDC `sub` claim should typically match `repo:Prot0type/portfolio-website:environment:development` for staging role trust
+- noted that branch restriction should be enforced via GitHub Environment branch rules when using environment-based OIDC `sub`
+
 ## 10. Next Iteration Candidates
 
 - Tune animation pacing and corner-L interpolation
