@@ -718,6 +718,47 @@ Outcome clarified:
 - staging/prod data in DynamoDB and S3 persists across normal deploys; manual re-entry is mainly avoided as long as stacks are updated, not recreated
 - OIDC role-based GitHub Actions is the preferred deployment model for this repo going forward
 
+### Prompt AJ: Use `dev` branch as staging deployment branch
+
+User requested:
+
+- changes on local `dev` branch should reflect in staging environment
+
+Outcome implemented:
+
+- staging GitHub Actions deploy workflow now auto-triggers on push to `dev`
+- added manual trigger (`workflow_dispatch`) to staging deploy workflow for convenience
+- CI workflow push triggers now include both `dev` and `main`
+- CI/CD docs updated to reflect `dev -> staging`, `main -> validate/promote` branch flow
+
+### Prompt AK: AWS deployment steps + OIDC role setup + Cognito configuration explanation
+
+User requested:
+
+- step-by-step guidance to deploy to AWS now
+- explicit setup tasks including GitHub OIDC IAM roles
+- explanation of current Cognito configuration in the stack
+
+Outcome clarified:
+
+- documented deployment checklist covering AWS IAM OIDC provider, staging/prod deploy roles, GitHub secrets, and workflow triggers
+- explained current repo deployment flow (`dev` -> staging workflow, manual prod promotion)
+- explained Cognito user pool/client/admin seeding and how CMS/API use those outputs at deploy/runtime
+
+### Prompt AL: GitHub environments wiring confirmation (`development` / `production`)
+
+User reported:
+
+- created GitHub Environments `development` and `production`
+- assigned respective branches
+- moved deploy role ARNs into environment secrets
+
+Outcome implemented:
+
+- updated staging deploy workflow to use GitHub Environment `development`
+- confirmed production workflow already uses GitHub Environment `production`
+- updated CI/CD docs to clarify environment-secret scoping and workflow environment binding
+
 ## 10. Next Iteration Candidates
 
 - Tune animation pacing and corner-L interpolation

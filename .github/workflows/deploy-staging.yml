@@ -3,7 +3,8 @@ name: Deploy Staging
 on:
   push:
     branches:
-      - main
+      - dev
+  workflow_dispatch:
 
 permissions:
   id-token: write
@@ -16,6 +17,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: development
     env:
       AWS_REGION: us-west-2
       STACK_NAME: PortfolioStaging
