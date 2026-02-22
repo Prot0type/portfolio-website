@@ -6,6 +6,16 @@ import HomePage from "./page";
 
 vi.mock("@/lib/api", () => ({
   getPublishedProjects: vi.fn(async () => []),
+  getSiteContent: vi.fn(async () => ({
+    bio_main: "IITH graduate with 3+ years of experience and a passion to create.",
+    bio_secondary: "Mi khoop katkat karte.",
+    updated_at: new Date().toISOString()
+  })),
+  DEFAULT_SITE_CONTENT: {
+    bio_main: "IITH graduate with 3+ years of experience and a passion to create.",
+    bio_secondary: "Mi khoop katkat karte.",
+    updated_at: new Date().toISOString()
+  },
   recordWebsiteView: vi.fn(async () => undefined)
 }));
 

@@ -257,14 +257,14 @@ export function HighlightCarousel({ projects }: HighlightCarouselProps) {
             {source.map((project) => (
               <Link
                 key={`${project.project_id}-segment-a`}
-                href={`/projects/${project.project_id}`}
+                href={`/projects/${project.project_slug}`}
                 className="highlight-card"
                 onClick={handleCardClick}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={project.images[0]?.url ?? "/images/project-1.svg"}
-                  alt={project.images[0]?.alt || `${project.title} thumbnail`}
+                  src={project.thumbnail?.url ?? "/images/project-1.svg"}
+                  alt={project.thumbnail?.alt || `${project.title} thumbnail`}
                   loading="lazy"
                   decoding="async"
                 />
@@ -280,14 +280,14 @@ export function HighlightCarousel({ projects }: HighlightCarouselProps) {
             {source.map((project) => (
               <Link
                 key={`${project.project_id}-segment-b`}
-                href={`/projects/${project.project_id}`}
+                href={`/projects/${project.project_slug}`}
                 className="highlight-card"
                 onClick={handleCardClick}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={project.images[0]?.url ?? "/images/project-1.svg"}
-                  alt={project.images[0]?.alt || `${project.title} thumbnail`}
+                  src={project.thumbnail?.url ?? "/images/project-1.svg"}
+                  alt={project.thumbnail?.alt || `${project.title} thumbnail`}
                   loading="lazy"
                   decoding="async"
                 />

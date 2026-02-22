@@ -105,6 +105,19 @@ button:hover {
   margin-top: 0;
 }
 
+.site-content-editor {
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  padding: 0.8rem;
+  margin-bottom: 1rem;
+  background: rgba(16, 23, 39, 0.85);
+}
+
+.site-content-editor h2 {
+  margin: 0 0 0.7rem;
+  font-size: 1.05rem;
+}
+
 label {
   display: block;
   margin-bottom: 0.8rem;
@@ -153,6 +166,33 @@ textarea {
 
 .checkbox-row span {
   color: #cad8f5;
+}
+
+.thumbnail-editor {
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  margin-bottom: 0.8rem;
+}
+
+.thumbnail-editor h3 {
+  margin: 0 0 0.65rem;
+  font-size: 0.95rem;
+}
+
+.thumbnail-preview {
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  overflow: hidden;
+  margin: 0 0 0.6rem;
+  background: #10192c;
+}
+
+.thumbnail-preview img {
+  width: 100%;
+  display: block;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
 }
 
 .image-list {

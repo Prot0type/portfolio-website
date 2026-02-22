@@ -11,17 +11,26 @@ export type ProjectImage = {
 
 export type ProjectRecord = {
   project_id: string;
+  project_short_name: string;
+  project_slug: string;
   title: string;
   description: string;
   tags: string[];
   category: ProjectCategory;
   project_date: string;
+  thumbnail: ProjectImage;
   images: ProjectImage[];
   is_highlighted: boolean;
   status: ProjectStatus;
   sort_order: number;
   extra: Record<string, unknown>;
   created_at: string;
+  updated_at: string;
+};
+
+export type SiteContentRecord = {
+  bio_main: string;
+  bio_secondary: string;
   updated_at: string;
 };
 

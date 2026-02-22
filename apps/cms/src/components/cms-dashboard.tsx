@@ -5,14 +5,31 @@ import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import {
   createProject,
   deleteProject,
+  getSiteContent,
   listProjects,
   updateProject,
+  updateSiteContent,
   updateProjectStatus,
   uploadImage
 } from "@/lib/api";
-import type { ProjectCategory, ProjectImage, ProjectInput, ProjectRecord, ProjectStatus } from "@/lib/types";
+import type {
+  ProjectCategory,
+  ProjectImage,
+  ProjectInput,
+  ProjectRecord,
+  ProjectStatus,
+  SiteContentInput
+} from "@/lib/types";
 
 const CATEGORY_OPTIONS: ProjectCategory[] = ["Personal", "College", "Work", "Freelance"];
+const DEFAULT_BIO_MAIN = "IITH graduate with 3+ years of experience and a passion to create.";
+const DEFAULT_BIO_SECONDARY = "Mi khoop katkat karte.";
+const SHORT_NAME_PATTERN = /^[A-Za-z0-9 ]+$/;
+const DEFAULT_THUMBNAIL: ProjectImage = {
+  key: "default-thumbnail",
+  url: "/images/project-1.svg",
+  alt: "Project thumbnail"
+};
 
 function generateProjectId() {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -24,11 +41,14 @@ function generateProjectId() {
 function newFormState(): ProjectInput {
   return {
     project_id: generateProjectId(),
+    project_short_name: "",
+    project_slug: "",
     title: "",
     description: "",
     tags: [],
     category: "Personal",
     project_date: new Date().toISOString().slice(0, 10),
+    thumbnail: DEFAULT_THUMBNAIL,
     images: [],
     is_highlighted: false,
     status: "draft",
@@ -48,12 +68,46 @@ function tagsToInput(value: string[]): string {
   return value.join(", ");
 }
 
-function validateForStatus(tags: string[], category: ProjectCategory | undefined): string | null {
+function validateForStatus(
+  tags: string[],
+  category: ProjectCategory | undefined,
+  projectShortName: string,
+  thumbnailUrl: string
+): string | null {
   if (!category) {
     return "Category is required before saving.";
   }
   if (tags.length === 0) {
     return "At least one tag is required. The first tag is the primary tag.";
+  }
+  if (!projectShortName.trim()) {
+    return "Project short name is required before saving.";
+  }
+  if (!thumbnailUrl.trim()) {
+    return "Project thumbnail is required before saving.";
+  }
+  return null;
+}
+
+function normalizeShortName(value: string): string {
+  return value.replace(/\s+/g, " ").trim();
+}
+
+function shortNameToSlug(value: string): string {
+  const normalized = normalizeShortName(value);
+  if (!normalized) {
+    return "";
+  }
+  return normalized.toLowerCase().split(" ").join("-");
+}
+
+function validateShortName(value: string): string | null {
+  const normalized = normalizeShortName(value);
+  if (!normalized) {
+    return "Project short name is required.";
+  }
+  if (!SHORT_NAME_PATTERN.test(normalized)) {
+    return "Project short name can use only letters, numbers, and spaces.";
   }
   return null;
 }
@@ -66,10 +120,16 @@ type CmsDashboardProps = {
 export function CmsDashboard({ userLabel, onSignOut }: CmsDashboardProps) {
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
   const [form, setForm] = useState<ProjectInput>(newFormState());
+  const [siteContent, setSiteContent] = useState<SiteContentInput>({
+    bio_main: DEFAULT_BIO_MAIN,
+    bio_secondary: DEFAULT_BIO_SECONDARY
+  });
   const [tagInput, setTagInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [siteSaving, setSiteSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [thumbnailUploading, setThumbnailUploading] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
   const selectedProject = useMemo(
@@ -80,8 +140,12 @@ export function CmsDashboard({ userLabel, onSignOut }: CmsDashboardProps) {
   async function refresh() {
     setLoading(true);
     try {
-      const data = await listProjects();
-      setProjects(data);
+      const [projectData, siteData] = await Promise.all([listProjects(), getSiteContent()]);
+      setProjects(projectData);
+      setSiteContent({
+        bio_main: siteData.bio_main || DEFAULT_BIO_MAIN,
+        bio_secondary: siteData.bio_secondary || DEFAULT_BIO_SECONDARY
+      });
       setNotice(null);
     } catch (error) {
       setNotice((error as Error).message);
@@ -97,11 +161,14 @@ export function CmsDashboard({ userLabel, onSignOut }: CmsDashboardProps) {
   function editProject(project: ProjectRecord) {
     setForm({
       project_id: project.project_id,
+      project_short_name: project.project_short_name,
+      project_slug: project.project_slug,
       title: project.title,
       description: project.description,
       tags: project.tags,
       category: project.category,
       project_date: project.project_date,
+      thumbnail: project.thumbnail,
       images: project.images,
       is_highlighted: project.is_highlighted,
       status: project.status,
@@ -120,11 +187,36 @@ export function CmsDashboard({ userLabel, onSignOut }: CmsDashboardProps) {
     setForm((previous) => ({ ...previous, [key]: value }));
   }
 
+  function updateShortName(value: string) {
+    setForm((previous) => {
+      const normalized = value.replace(/\s+/g, " ").replace(/^\s+/, "");
+      return {
+        ...previous,
+        project_short_name: normalized,
+        project_slug: shortNameToSlug(normalized)
+      };
+    });
+  }
+
   async function save() {
     const parsedTags = parseTags(tagInput);
-    const validationError = validateForStatus(parsedTags, form.category);
+    const validationError = validateForStatus(
+      parsedTags,
+      form.category,
+      form.project_short_name,
+      form.thumbnail?.url ?? ""
+    );
     if (validationError) {
       setNotice(validationError);
+      return;
+    }
+    const shortNameError = validateShortName(form.project_short_name);
+    if (shortNameError) {
+      setNotice(shortNameError);
+      return;
+    }
+    if (!form.thumbnail?.url?.trim()) {
+      setNotice("Project thumbnail is required.");
       return;
     }
 
@@ -132,6 +224,8 @@ export function CmsDashboard({ userLabel, onSignOut }: CmsDashboardProps) {
     try {
       const payload: ProjectInput = {
         ...form,
+        project_short_name: normalizeShortName(form.project_short_name),
+        project_slug: shortNameToSlug(form.project_short_name),
         tags: parsedTags
       };
 
@@ -149,6 +243,25 @@ export function CmsDashboard({ userLabel, onSignOut }: CmsDashboardProps) {
       setNotice((error as Error).message);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function saveSiteContent() {
+    const bioMain = siteContent.bio_main.trim();
+    const bioSecondary = siteContent.bio_secondary.trim();
+    if (!bioMain || !bioSecondary) {
+      setNotice("Both home bio fields are required.");
+      return;
+    }
+    setSiteSaving(true);
+    try {
+      await updateSiteContent({ bio_main: bioMain, bio_secondary: bioSecondary });
+      setNotice("Home bio updated");
+      await refresh();
+    } catch (error) {
+      setNotice((error as Error).message);
+    } finally {
+      setSiteSaving(false);
     }
   }
 
@@ -174,7 +287,12 @@ export function CmsDashboard({ userLabel, onSignOut }: CmsDashboardProps) {
       setNotice("Project not found");
       return;
     }
-    const validationError = validateForStatus(target.tags, target.category);
+    const validationError = validateForStatus(
+      target.tags,
+      target.category,
+      target.project_short_name,
+      target.thumbnail?.url ?? ""
+    );
     if (validationError) {
       setNotice(validationError);
       return;
@@ -209,6 +327,25 @@ export function CmsDashboard({ userLabel, onSignOut }: CmsDashboardProps) {
     }
   }
 
+  async function onThumbnailSelect(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    setThumbnailUploading(true);
+    try {
+      const uploaded = await uploadImage(file);
+      updateField("thumbnail", { key: uploaded.key, url: uploaded.publicUrl, alt: form.title || file.name });
+      setNotice("Thumbnail updated");
+    } catch (error) {
+      setNotice((error as Error).message);
+    } finally {
+      setThumbnailUploading(false);
+      event.target.value = "";
+    }
+  }
+
   return (
     <main className="cms-shell">
       <header className="cms-header">
@@ -233,11 +370,49 @@ export function CmsDashboard({ userLabel, onSignOut }: CmsDashboardProps) {
 
       <section className="cms-layout">
         <article className="editor">
+          <section className="site-content-editor">
+            <h2>Home Bio</h2>
+            <label>
+              Main Line (required)
+              <input
+                value={siteContent.bio_main}
+                onChange={(event) =>
+                  setSiteContent((previous) => ({ ...previous, bio_main: event.target.value }))
+                }
+              />
+            </label>
+            <label>
+              Secondary Line (required)
+              <input
+                value={siteContent.bio_secondary}
+                onChange={(event) =>
+                  setSiteContent((previous) => ({ ...previous, bio_secondary: event.target.value }))
+                }
+              />
+            </label>
+            <button
+              type="button"
+              onClick={saveSiteContent}
+              disabled={siteSaving || !siteContent.bio_main.trim() || !siteContent.bio_secondary.trim()}
+            >
+              {siteSaving ? "Saving..." : "Save Home Bio"}
+            </button>
+          </section>
+
           <h2>{selectedProject ? "Edit Project" : "Create Project"}</h2>
           <label>
             Project ID
             <input value={form.project_id} onChange={(event) => updateField("project_id", event.target.value)} />
           </label>
+          <label>
+            Project Short Name (required)
+            <input value={form.project_short_name} onChange={(event) => updateShortName(event.target.value)} />
+          </label>
+          <p className="helper-text">
+            Letters, numbers, and spaces only. Recommended length is under 20 characters.
+            <br />
+            URL preview: /projects/{form.project_slug || "your-short-name"}
+          </p>
           <label>
             Title
             <input value={form.title} onChange={(event) => updateField("title", event.target.value)} />
@@ -301,6 +476,33 @@ export function CmsDashboard({ userLabel, onSignOut }: CmsDashboardProps) {
             <span>Highlighted project (shown on home carousel)</span>
           </label>
 
+          <section className="thumbnail-editor">
+            <h3>Carousel Thumbnail (required)</h3>
+            <label>
+              Upload Thumbnail
+              <input type="file" accept="image/*" onChange={onThumbnailSelect} disabled={thumbnailUploading} />
+            </label>
+            <label>
+              Thumbnail URL
+              <input
+                value={form.thumbnail.url}
+                onChange={(event) => updateField("thumbnail", { ...form.thumbnail, url: event.target.value })}
+              />
+            </label>
+            <label>
+              Thumbnail Alt
+              <input
+                value={form.thumbnail.alt}
+                onChange={(event) => updateField("thumbnail", { ...form.thumbnail, alt: event.target.value })}
+              />
+            </label>
+            <div className="thumbnail-preview">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={form.thumbnail.url || "/images/project-1.svg"} alt={form.thumbnail.alt || form.title || "Thumbnail"} />
+            </div>
+            <p className="helper-text">This thumbnail is used for the home carousel and project cards.</p>
+          </section>
+
           <label>
             Upload Image
             <input type="file" accept="image/*" onChange={onImageSelect} disabled={uploading} />
@@ -338,7 +540,11 @@ export function CmsDashboard({ userLabel, onSignOut }: CmsDashboardProps) {
             ))}
           </ul>
 
-          <button type="button" onClick={save} disabled={saving || !form.title || !form.description}>
+          <button
+            type="button"
+            onClick={save}
+            disabled={saving || !form.title || !form.description || !form.project_short_name.trim() || !form.thumbnail.url}
+          >
             {saving ? "Saving..." : selectedProject ? "Update Project" : "Create Project"}
           </button>
         </article>
@@ -353,9 +559,8 @@ export function CmsDashboard({ userLabel, onSignOut }: CmsDashboardProps) {
                 <div>
                   <h3>{project.title}</h3>
                   <p>{project.project_date}</p>
-                  <p>
-                    {project.category} · Primary tag: {project.tags[0] ?? "-"}
-                  </p>
+                  <p>{project.category} - Primary tag: {project.tags[0] ?? "-"}</p>
+                  <p>Slug: /projects/{project.project_slug}</p>
                   <span className={`status status-${project.status}`}>{project.status}</span>
                   {project.is_highlighted ? <span className="highlight-pill">highlighted</span> : null}
                 </div>
@@ -381,4 +586,3 @@ export function CmsDashboard({ userLabel, onSignOut }: CmsDashboardProps) {
     </main>
   );
 }
-

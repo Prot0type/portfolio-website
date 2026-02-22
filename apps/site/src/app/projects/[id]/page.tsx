@@ -1,4 +1,4 @@
-import { getFallbackProjectIds } from "@/lib/api";
+import { getFallbackProjectSlugs } from "@/lib/api";
 
 import { ProjectDetailClient } from "./project-detail-client";
 
@@ -9,10 +9,9 @@ type ProjectDetailPageProps = {
 };
 
 export function generateStaticParams() {
-  return getFallbackProjectIds().map((id) => ({ id }));
+  return getFallbackProjectSlugs().map((id) => ({ id }));
 }
 
 export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
-  return <ProjectDetailClient projectId={params.id} />;
+  return <ProjectDetailClient projectSlug={params.id} />;
 }
-

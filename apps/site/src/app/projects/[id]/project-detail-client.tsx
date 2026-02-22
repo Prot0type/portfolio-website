@@ -4,12 +4,12 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
-import { getPublishedProjectById, recordWebsiteView } from "@/lib/api";
+import { getPublishedProjectBySlug, recordWebsiteView } from "@/lib/api";
 import { CATEGORY_CLASS, projectPrimaryTag } from "@/lib/project-utils";
 import type { ProjectRecord } from "@/lib/types";
 
 type ProjectDetailClientProps = {
-  projectId: string;
+  projectSlug: string;
 };
 
 type ZoomImageState = {
@@ -17,17 +17,17 @@ type ZoomImageState = {
   alt: string;
 } | null;
 
-export function ProjectDetailClient({ projectId }: ProjectDetailClientProps) {
+export function ProjectDetailClient({ projectSlug }: ProjectDetailClientProps) {
   const [project, setProject] = useState<ProjectRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [zoomImage, setZoomImage] = useState<ZoomImageState>(null);
 
   useEffect(() => {
-    getPublishedProjectById(projectId)
+    getPublishedProjectBySlug(projectSlug)
       .then((data) => setProject(data))
       .finally(() => setLoading(false));
-    recordWebsiteView(`/projects/${projectId}`).catch(() => undefined);
-  }, [projectId]);
+    recordWebsiteView(`/projects/${projectSlug}`).catch(() => undefined);
+  }, [projectSlug]);
 
   if (loading) {
     return (
@@ -51,7 +51,7 @@ export function ProjectDetailClient({ projectId }: ProjectDetailClientProps) {
   return (
     <main className="page-shell">
       <Link href="/projects" className="inline-link">
-        ← Back to projects
+        Back to projects
       </Link>
 
       <header className="project-detail-header">
@@ -59,7 +59,7 @@ export function ProjectDetailClient({ projectId }: ProjectDetailClientProps) {
         <h1>{project.title}</h1>
         <p>{project.description}</p>
         <p className={`project-category ${CATEGORY_CLASS[project.category]}`}>
-          {project.category} · Primary tag: {projectPrimaryTag(project)}
+          {project.category} - Primary tag: {projectPrimaryTag(project)}
         </p>
       </header>
 
@@ -80,7 +80,7 @@ export function ProjectDetailClient({ projectId }: ProjectDetailClientProps) {
       <section className="detail-tag-wrap">
         {project.tags.map((tag, index) => (
           <span key={tag} className={`detail-tag ${index === 0 ? "primary" : ""}`}>
-            {index === 0 ? `Primary · ${tag}` : tag}
+            {index === 0 ? `Primary - ${tag}` : tag}
           </span>
         ))}
       </section>
@@ -110,4 +110,3 @@ export function ProjectDetailClient({ projectId }: ProjectDetailClientProps) {
     </main>
   );
 }
-

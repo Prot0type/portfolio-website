@@ -5,8 +5,8 @@ import { motion, useMotionValueEvent, useReducedMotion, useScroll, useSpring, us
 
 import { HighlightCarousel } from "@/components/highlight-carousel";
 import { SocialIconRow } from "@/components/social-icon-row";
-import { getPublishedProjects, recordWebsiteView } from "@/lib/api";
-import type { ProjectRecord } from "@/lib/types";
+import { DEFAULT_SITE_CONTENT, getPublishedProjects, getSiteContent, recordWebsiteView } from "@/lib/api";
+import type { ProjectRecord, SiteContentRecord } from "@/lib/types";
 
 const FRAME_CORNER_SIZE = 64;
 
@@ -16,6 +16,7 @@ function lerp(start: number, end: number, progress: number): number {
 
 export default function HomePage() {
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
+  const [siteContent, setSiteContent] = useState<SiteContentRecord>(DEFAULT_SITE_CONTENT);
   const [loading, setLoading] = useState(true);
   const [viewport, setViewport] = useState({ width: 1280, height: 900 });
   const [outroInteractive, setOutroInteractive] = useState(false);
@@ -86,8 +87,11 @@ export default function HomePage() {
   });
 
   useEffect(() => {
-    getPublishedProjects()
-      .then((records) => setProjects(records))
+    Promise.all([getPublishedProjects(), getSiteContent()])
+      .then(([records, content]) => {
+        setProjects(records);
+        setSiteContent(content);
+      })
       .finally(() => setLoading(false));
     recordWebsiteView("/").catch(() => undefined);
   }, []);
@@ -184,8 +188,8 @@ export default function HomePage() {
             decoding="async"
           />
           <div className="home-profile-bio">
-            <p>IITH graduate with 3+ years of experience and a passion to create.</p>
-            <p>Mi khoop katkat karte.</p>
+            <p>{siteContent.bio_main}</p>
+            <p>{siteContent.bio_secondary}</p>
           </div>
         </motion.section>
         {loading ? <p className="empty-note">Loading projects...</p> : <HighlightCarousel projects={projects} />}

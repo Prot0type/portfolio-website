@@ -76,17 +76,17 @@ export default function ProjectsPage() {
 
       <section className="projects-grid">
         {filteredProjects.map((project) => (
-          <Link key={project.project_id} href={`/projects/${project.project_id}`} className="project-list-card">
+          <Link key={project.project_id} href={`/projects/${project.project_slug}`} className="project-list-card">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={project.images[0]?.url ?? "/images/project-1.svg"}
-              alt={project.images[0]?.alt || `${project.title} thumbnail`}
+              src={project.thumbnail?.url ?? "/images/project-1.svg"}
+              alt={project.thumbnail?.alt || `${project.title} thumbnail`}
             />
             <div>
               <h2>{project.title}</h2>
               <p>{project.description}</p>
               <p className={`project-category ${CATEGORY_CLASS[project.category]}`}>
-                {project.category} · Primary tag: {projectPrimaryTag(project)}
+                {project.category} - Primary tag: {projectPrimaryTag(project)}
               </p>
             </div>
           </Link>
@@ -95,4 +95,5 @@ export default function ProjectsPage() {
     </main>
   );
 }
+
 

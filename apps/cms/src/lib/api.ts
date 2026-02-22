@@ -1,5 +1,5 @@
 import { getAuthToken } from "@/lib/auth";
-import type { ProjectInput, ProjectRecord, ProjectStatus } from "@/lib/types";
+import type { ProjectInput, ProjectRecord, ProjectStatus, SiteContentInput, SiteContentRecord } from "@/lib/types";
 
 function apiBase() {
   return (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").replace(/\/$/, "");
@@ -21,6 +21,18 @@ function buildLocalUploadFallback(file: File) {
   };
 }
 
+async function readApiError(response: Response, fallbackMessage: string): Promise<Error> {
+  try {
+    const data = (await response.json()) as { detail?: string };
+    if (data?.detail) {
+      return new Error(data.detail);
+    }
+  } catch {
+    // Ignore JSON parse errors and return fallback message.
+  }
+  return new Error(fallbackMessage);
+}
+
 async function authHeaders(): Promise<Record<string, string>> {
   const token = await getAuthToken();
   if (!token) {
@@ -36,7 +48,7 @@ export async function listProjects(): Promise<ProjectRecord[]> {
   const headers = await authHeaders();
   const response = await fetch(withBase("/api/projects?status_filter=all"), { headers, cache: "no-store" });
   if (!response.ok) {
-    throw new Error("Unable to load projects");
+    throw await readApiError(response, "Unable to load projects");
   }
   return (await response.json()) as ProjectRecord[];
 }
@@ -49,7 +61,7 @@ export async function createProject(input: ProjectInput): Promise<ProjectRecord>
     body: JSON.stringify(input)
   });
   if (!response.ok) {
-    throw new Error("Unable to create project");
+    throw await readApiError(response, "Unable to create project");
   }
   return (await response.json()) as ProjectRecord;
 }
@@ -62,7 +74,7 @@ export async function updateProject(projectId: string, input: Partial<ProjectInp
     body: JSON.stringify(input)
   });
   if (!response.ok) {
-    throw new Error("Unable to update project");
+    throw await readApiError(response, "Unable to update project");
   }
   return (await response.json()) as ProjectRecord;
 }
@@ -74,7 +86,7 @@ export async function deleteProject(projectId: string): Promise<void> {
     headers
   });
   if (!response.ok) {
-    throw new Error("Unable to delete project");
+    throw await readApiError(response, "Unable to delete project");
   }
 }
 
@@ -86,7 +98,7 @@ export async function updateProjectStatus(projectId: string, status: ProjectStat
     body: JSON.stringify({ status })
   });
   if (!response.ok) {
-    throw new Error("Unable to update status");
+    throw await readApiError(response, "Unable to update status");
   }
   return (await response.json()) as ProjectRecord;
 }
@@ -126,4 +138,26 @@ export async function uploadImage(file: File): Promise<{ key: string; publicUrl:
   }
 
   return { key: data.key, publicUrl: data.public_url };
+}
+
+export async function getSiteContent(): Promise<SiteContentRecord> {
+  const headers = await authHeaders();
+  const response = await fetch(withBase("/api/site-content"), { headers, cache: "no-store" });
+  if (!response.ok) {
+    throw await readApiError(response, "Unable to load site content");
+  }
+  return (await response.json()) as SiteContentRecord;
+}
+
+export async function updateSiteContent(input: SiteContentInput): Promise<SiteContentRecord> {
+  const headers = await authHeaders();
+  const response = await fetch(withBase("/api/site-content"), {
+    method: "PUT",
+    headers,
+    body: JSON.stringify(input)
+  });
+  if (!response.ok) {
+    throw await readApiError(response, "Unable to update site content");
+  }
+  return (await response.json()) as SiteContentRecord;
 }

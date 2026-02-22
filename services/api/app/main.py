@@ -19,6 +19,8 @@ from app.models import (
     ProjectStatus,
     ProjectStatusUpdate,
     ProjectUpdate,
+    SiteContentRecord,
+    SiteContentUpdate,
 )
 from app.repository import DynamoProjectRepository, MemoryProjectRepository, ProjectRepository
 
@@ -66,6 +68,26 @@ def create_app() -> FastAPI:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="At least one tag is required before changing status. The first tag is primary.",
             )
+        if not project.project_short_name.strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Project short name is required before changing status.",
+            )
+        if not project.thumbnail.url.strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Project thumbnail is required before changing status.",
+            )
+
+    def find_project_by_slug(repo: ProjectRepository, project_slug: str) -> Optional[ProjectRecord]:
+        exact_match = repo.get_project_by_slug(project_slug)
+        if exact_match:
+            return exact_match
+        all_projects = repo.list_projects(status=None)
+        for project in all_projects:
+            if project.project_slug == project_slug:
+                return project
+        return None
 
     @app.get("/api/projects", response_model=list[ProjectRecord])
     def list_projects(
@@ -94,12 +116,31 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
         return project
 
+    @app.get("/api/projects/by-slug/{project_slug}", response_model=ProjectRecord)
+    def get_project_by_slug(
+        project_slug: str,
+        claims: Optional[dict] = Depends(optional_claims),
+        repo: ProjectRepository = Depends(get_repo),
+    ) -> ProjectRecord:
+        project = find_project_by_slug(repo, project_slug)
+        if not project:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+        if project.status == "draft" and not is_authorized(claims):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+        return project
+
     @app.post("/api/projects", response_model=ProjectRecord, status_code=status.HTTP_201_CREATED)
     def create_project(
         payload: ProjectCreate,
         _: dict = Depends(require_admin),
         repo: ProjectRepository = Depends(get_repo),
     ) -> ProjectRecord:
+        existing = find_project_by_slug(repo, payload.project_slug)
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Project short name must be unique.",
+            )
         return repo.create_project(payload)
 
     @app.put("/api/projects/{project_id}", response_model=ProjectRecord)
@@ -114,6 +155,13 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
 
         candidate = existing.model_copy(update=payload.model_dump(exclude_unset=True))
+        if payload.project_short_name is not None:
+            duplicate = find_project_by_slug(repo, candidate.project_slug)
+            if duplicate and duplicate.project_id != project_id:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Project short name must be unique.",
+                )
         if payload.status is not None:
             validate_project_for_status_change(candidate)
 
@@ -153,6 +201,18 @@ def create_app() -> FastAPI:
         if not deleted:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
         return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+    @app.get("/api/site-content", response_model=SiteContentRecord)
+    def get_site_content(repo: ProjectRepository = Depends(get_repo)) -> SiteContentRecord:
+        return repo.get_site_content()
+
+    @app.put("/api/site-content", response_model=SiteContentRecord)
+    def update_site_content(
+        payload: SiteContentUpdate,
+        _: dict = Depends(require_admin),
+        repo: ProjectRepository = Depends(get_repo),
+    ) -> SiteContentRecord:
+        return repo.upsert_site_content(payload)
 
     @app.post("/api/images/presign", response_model=PresignImageResponse)
     def presign_upload(

@@ -638,6 +638,86 @@ Outcome implemented:
 - recorded this checkpoint in the project prompt/decision log
 - committed current landing-page prototype state with the requested commit title
 
+### Prompt AG: CMS content controls + slugged project pages + dedicated thumbnails
+
+User requested:
+
+- make home bio lines editable from CMS (main + secondary), both required with defaults
+- create shareable project pages with cleaner URLs, not UUIDs
+- add required unique project short name in CMS
+  - allow letters, numbers, spaces only
+  - reject other characters
+  - convert spaces to `-` for URL path
+  - recommend short names under 20 chars (guidance, not hard max)
+- keep internal UUID field for future use
+- add dedicated project thumbnail (separate from image attachments) for home carousel
+- document all changes
+
+Outcome implemented:
+
+- backend schema extended with:
+  - `project_short_name` (required)
+  - `project_slug` (derived from short name)
+  - `thumbnail` (required, separate from attachments)
+- slug uniqueness enforced server-side with conflict response (`409`) on duplicates
+- added slug lookup endpoint for project details:
+  - `GET /api/projects/by-slug/{project_slug}`
+- added CMS-managed site content endpoints:
+  - `GET /api/site-content`
+  - `PUT /api/site-content`
+- CMS updates:
+  - new Home Bio editor (required main/secondary fields with defaults)
+  - required project short-name input with URL preview and validation guidance
+  - separate required carousel thumbnail upload/editor and preview
+  - improved API error surfacing so backend validation/conflict detail is shown
+- website updates:
+  - home bio now loads from API site content (with default fallback)
+  - project links switched to slug URLs (`/projects/<slug>`)
+  - project detail page now resolves by slug
+  - home carousel and projects listing now use dedicated `thumbnail`
+- tests/build validation:
+  - API pytest: `6 passed`
+  - `npm run test:cms`: passed
+- `npm run test:site`: passed
+- `npm run build:cms`: passed
+- `npm run build:site`: passed
+
+### Prompt AH: Deployment model split + Lambda packaging clarification
+
+User requested:
+
+- adopt deployment split:
+  - infra deploy manual
+  - app-only deploy for faster site/CMS iterations
+- clarify how Lambda code is packaged and where it resides
+
+Outcome clarified:
+
+- accepted deployment split model for upcoming setup
+- Lambda source code lives in repo at `services/api`
+- CDK currently bundles and deploys Lambda from that source:
+  - `infra/cdk/portfolio_cdk/portfolio_stack.py` via `_build_api_asset()`
+- during deploy, CDK uploads bundled Lambda asset to the CDK bootstrap S3 bucket and updates Lambda function code reference
+- at runtime, Lambda executes deployed package in Lambda service storage; it does not fetch code from S3 per request
+
+### Prompt AI: Full CI/CD preference with split deployment workflows
+
+User requested:
+
+- make deployments fully CI/CD-driven
+- use separate GitHub Actions pipelines for different deployment types
+- rely on GitHub OIDC roles and existing CDK bootstrap in `us-west-2`
+- preserve/stage data in DDB/S3 for realistic testing instead of repeated manual re-entry
+
+Outcome clarified:
+
+- full CI/CD is feasible with current architecture
+- recommended split:
+  - `infra+api` deploy workflows (CDK deploy, because Lambda code is packaged via CDK asset)
+  - `app-only` deploy workflows (build/sync/invalidate for site+CMS static assets)
+- staging/prod data in DynamoDB and S3 persists across normal deploys; manual re-entry is mainly avoided as long as stacks are updated, not recreated
+- OIDC role-based GitHub Actions is the preferred deployment model for this repo going forward
+
 ## 10. Next Iteration Candidates
 
 - Tune animation pacing and corner-L interpolation
